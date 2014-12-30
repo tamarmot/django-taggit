@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from taggit.forms import TagField
 from taggit.models import GenericTaggedItemBase, TaggedItem
-from taggit.utils import require_instance_manager
+from taggit.utils import require_instance_manager, edit_string_for_tags
 
 try:
     from django.contrib.contenttypes.fields import GenericRelation
@@ -130,6 +130,16 @@ class _TaggableManager(models.Manager):
 
     def _lookup_kwargs(self):
         return self.through.lookup_kwargs(self.instance)
+
+    @property
+    def edit_string(self):
+        """
+        Return a comma-delimited list of tags, suitible for editing by the user or generating a tag form.
+        """
+        return edit_string_for_tags( self.get_query_set().all() )
+
+    def __unicode__(self):
+        return self.edit_string
 
     @require_instance_manager
     def add(self, *tags):
