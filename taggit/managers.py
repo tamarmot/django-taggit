@@ -102,8 +102,9 @@ class _TaggableManager(models.Manager):
         from django.db import connections
         db = self._db or router.db_for_read(instance.__class__, instance=instance)
 
-        fieldname = ('object_id' if issubclass(self.through, GenericTaggedItemBase)
-                     else 'content_object')
+#         fieldname = ('object_id' if issubclass(self.through, GenericTaggedItemBase)
+#                      else 'content_object')
+        fieldname = ('object_id')
         fk = self.through._meta.get_field(fieldname)
         query = {
             '%s__%s__in' % (self.through.tag_relname(), fk.name):
