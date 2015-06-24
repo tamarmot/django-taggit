@@ -189,3 +189,4 @@ class TaggedItem(GenericTaggedItemBase, TaggedItemBase):
     class Meta:
         verbose_name = _("Tagged Item")
         verbose_name_plural = _("Tagged Items")
+        managed = False
