@@ -28,7 +28,6 @@ except ImportError:
     pass  # PathInfo is not used on Django < 1.6
 
 
-
 def _model_name(model):
     if VERSION < (1, 7):
         return model._meta.module_name
@@ -163,7 +162,7 @@ class _TaggableManager(models.Manager):
         tag_objs.update(existing)
 
         for new_tag in str_tags - set(t.name for t in existing):
-            tag_objs.add(self.through.tag_model().objects.create(name=new_tag))
+            tag_objs.add(self.through.tag_model().objects.get_or_create(name=new_tag))
 
         for tag in tag_objs:
             self.through.objects.get_or_create(tag=tag, **self._lookup_kwargs())
