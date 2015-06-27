@@ -58,7 +58,6 @@ class TagBase(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pk and not self.slug:
-            self.fillId()
             self.slug = self.slugify(self.name)
             from django.db import router
             using = kwargs.get("using") or router.db_for_write(
@@ -71,6 +70,8 @@ class TagBase(models.Model):
             # most cases ;)
             try:
                 with atomic(using=using):
+                    if not self.pk:
+                        self.fillId()
                     res = super(TagBase, self).save(*args, **kwargs)
                 return res
             except IntegrityError:
@@ -85,6 +86,8 @@ class TagBase(models.Model):
                     self.slug = slug
                     # We purposely ignore concurrecny issues here for now.
                     # (That is, till we found a nice solution...)
+                    if not self.pk:
+                        self.fillId()
                     return super(TagBase, self).save(*args, **kwargs)
                 i += 1
         else:
