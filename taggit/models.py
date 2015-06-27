@@ -30,9 +30,19 @@ except AttributeError:
         else:
             transaction.savepoint_commit(sid, using=using)
 
+try:
+    HOSTNAME = socket.gethostname()
+except:
+    HOSTNAME = 'localhost'
+
 
 @python_2_unicode_compatible
 class TagBase(models.Model):
+    #  custom id field for uniqueness
+    id = models.CharField(max_length=128,
+                          unique=True, blank=False,
+                          editable=False, primary_key=True)
+
     name = models.CharField(verbose_name=_('Name'), unique=True, max_length=100)
     slug = models.SlugField(verbose_name=_('Slug'), unique=True, max_length=100)
 
@@ -42,8 +52,13 @@ class TagBase(models.Model):
     class Meta:
         abstract = True
 
+    def fillId(self):
+        index = self.__class__.objects.count() + 1
+        self.pk = HOSTNAME + "_" + str(index)
+
     def save(self, *args, **kwargs):
         if not self.pk and not self.slug:
+            self.fillId()
             self.slug = self.slugify(self.name)
             from django.db import router
             using = kwargs.get("using") or router.db_for_write(
@@ -73,6 +88,8 @@ class TagBase(models.Model):
                     return super(TagBase, self).save(*args, **kwargs)
                 i += 1
         else:
+            if not self.pk:
+                self.fillId()
             return super(TagBase, self).save(*args, **kwargs)
 
     def slugify(self, tag, i=None):
