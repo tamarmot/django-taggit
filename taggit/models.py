@@ -35,6 +35,7 @@ try:
 except:
     HOSTNAME = 'localhost'
 
+tag_index_map = {}
 
 @python_2_unicode_compatible
 class TagBase(models.Model):
@@ -51,12 +52,43 @@ class TagBase(models.Model):
 
     class Meta:
         abstract = True
+    
+    @classmethod
+    def getSafeIndex(cls, index):
+        pk_test = HOSTNAME + "_" + str(index)
+        try:
+            cls.objects.get(pk=pk_test)
+            return cls.getSafeIndex(index + 1)
+        except:
+            return index
+
+    @classmethod
+    def getLastId(cls, index=None):
+        if not index:
+            try:
+                index = tag_index_map[cls.__name__]
+                tag_index_map[cls.__name__] = index + 1
+            except:
+                # Initializing
+                if cls.objects.count():
+                    index = cls.objects.count() + 1
+                else:
+                    index = 0
+                index = cls.getSafeIndex(index)
+                tag_index_map[cls.__name__] = index
+            
+            return index
 
     def fillId(self):
-        index = self.__class__.objects.count() + 1
-        self.pk = HOSTNAME + "_" + str(index)
+        next_id = self.getLastId()
+        self.pk = HOSTNAME + "_" + str(next_id)
 
+    def preSave(self):
+        """ so sub classes can do something before saving """
+        pass
+    
     def save(self, *args, **kwargs):
+        self.preSave()
         if not self.pk and not self.slug:
             self.slug = self.slugify(self.name)
             from django.db import router
